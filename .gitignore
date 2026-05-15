@@ -1,0 +1,9 @@
+.linting
+
+*.prof
+*.pprof
+*.out
+*.pdf
+*.test
+
+log.test
