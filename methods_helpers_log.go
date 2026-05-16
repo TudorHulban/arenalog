@@ -15,7 +15,6 @@ func (l *Logger) logWithLabel(label string, estimatedMessageSize uint32, args []
 
 	if l.withCaller {
 		fileCaller, lineCaller := l.getCallerData(int(l.callerLevel))
-		// _, fileCaller, lineCaller, _ := runtime.Caller(int(l.callerLevel))
 		callingFromFile = fileCaller
 		callingFromLine = lineCaller
 	}
@@ -157,8 +156,10 @@ func (l *Logger) logwWithLabel(label, msg string, estimatedMessageSize uint32, k
 	)
 
 	if l.withCaller {
-		fileCaller, lineCaller := l.getCallerData(int(l.callerLevel))
+		// using the cache is faster than
 		// _, fileCaller, lineCaller, _ := runtime.Caller(int(l.callerLevel))
+		fileCaller, lineCaller := l.getCallerData(int(l.callerLevel))
+
 		callingFromFile = fileCaller
 		callingFromLine = lineCaller
 	}
