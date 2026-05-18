@@ -11,13 +11,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/bytearena"
+	"github.com/tudorhulban/bytearena/helpers"
 )
 
 // cpu: AMD Ryzen 7 5800H with Radeon Graphics
-// Benchmark_Debug/G1-16 	23994546	        45.81 ns/op	       7 B/op	       0 allocs/op
-// Benchmark_Debug/G2-16 	10402052	       111.5 ns/op	      21 B/op	       0 allocs/op
-// Benchmark_Debug/G3-16 	11623293	       101.4 ns/op	      20 B/op	       0 allocs/op
-// Benchmark_Debug/G4-16 	13196308	        89.85 ns/op	      18 B/op	       0 allocs/op
+// Benchmark_Debug/G1-16 	34433020	        34.52 ns/op	       0 B/op	       0 allocs/op
+// Benchmark_Debug/G2-16 	15059820	        80.17 ns/op	       0 B/op	       0 allocs/op
+// Benchmark_Debug/G3-16 	18178716	        66.70 ns/op	       0 B/op	       0 allocs/op
+// Benchmark_Debug/G4-16 	17501660	        71.16 ns/op	       0 B/op	       0 allocs/op
 
 func Benchmark_Debug(b *testing.B) {
 	gomaxprocsValues := []int{1, 2, 3, 4}
@@ -32,6 +33,13 @@ func Benchmark_Debug(b *testing.B) {
 				ingestor, errCrIngestor := bytearena.NewIngestor(
 					bytearena.Size100K(),
 					io.Discard,
+
+					helpers.TernaryWithValueIn(
+						[]int{1},
+						g,
+						nil,
+						bytearena.WithCounterCoreCPU(),
+					),
 				)
 				require.NoError(b, errCrIngestor)
 				require.NotNil(b, ingestor)
@@ -77,10 +85,10 @@ func Benchmark_Debug(b *testing.B) {
 }
 
 // cpu: AMD Ryzen 7 5800H with Radeon Graphics
-// Benchmark_Debugf/G1-16 	23244255	        51.84 ns/op	       7 B/op	       0 allocs/op
-// Benchmark_Debugf/G2-16 	24547304	        47.95 ns/op	       8 B/op	       0 allocs/op
-// Benchmark_Debugf/G3-16 	12575702	        98.49 ns/op	      17 B/op	       0 allocs/op
-// Benchmark_Debugf/G4-16 	13308579	        89.87 ns/op	      16 B/op	       0 allocs/op
+// Benchmark_Debugf/G1-16 	30545702	        39.43 ns/op	       0 B/op	       0 allocs/op
+// Benchmark_Debugf/G2-16 	26972127	        45.02 ns/op	       0 B/op	       0 allocs/op
+// Benchmark_Debugf/G3-16 	16123359	        72.93 ns/op	       0 B/op	       0 allocs/op
+// Benchmark_Debugf/G4-16 	16760646	        74.27 ns/op	       0 B/op	       0 allocs/op
 
 func Benchmark_Debugf(b *testing.B) {
 	gomaxprocsValues := []int{1, 2, 3, 4}
@@ -95,6 +103,13 @@ func Benchmark_Debugf(b *testing.B) {
 				ingestor, errCrIngestor := bytearena.NewIngestor(
 					bytearena.Size100K(),
 					io.Discard,
+
+					helpers.TernaryWithValueIn(
+						[]int{1},
+						g,
+						nil,
+						bytearena.WithCounterCoreCPU(),
+					),
 				)
 				require.NoError(b, errCrIngestor)
 				require.NotNil(b, ingestor)
@@ -139,10 +154,10 @@ func Benchmark_Debugf(b *testing.B) {
 }
 
 // cpu: AMD Ryzen 7 5800H with Radeon Graphics
-// Benchmark_Debugw/G1-16 	26162787	        45.03 ns/op	       5 B/op	       0 allocs/op
-// Benchmark_Debugw/G2-16 	11207133	       109.2 ns/op	      15 B/op	       0 allocs/op
-// Benchmark_Debugw/G3-16 	12244240	        98.87 ns/op	      15 B/op	       0 allocs/op
-// Benchmark_Debugw/G4-16 	13454937	        87.53 ns/op	      14 B/op	       0 allocs/op
+// Benchmark_Debugw/G1-16 	31837712	        36.43 ns/op	       0 B/op	       0 allocs/op
+// Benchmark_Debugw/G2-16 	15062788	        79.61 ns/op	       0 B/op	       0 allocs/op
+// Benchmark_Debugw/G3-16 	17563960	        69.25 ns/op	       0 B/op	       0 allocs/op
+// Benchmark_Debugw/G4-16 	17123467	        71.49 ns/op	       0 B/op	       0 allocs/op
 
 func Benchmark_Debugw(b *testing.B) {
 	gomaxprocsValues := []int{1, 2, 3, 4}
@@ -157,6 +172,13 @@ func Benchmark_Debugw(b *testing.B) {
 				ingestor, errCrIngestor := bytearena.NewIngestor(
 					bytearena.Size100K(),
 					io.Discard,
+
+					helpers.TernaryWithValueIn(
+						[]int{1},
+						g,
+						nil,
+						bytearena.WithCounterCoreCPU(),
+					),
 				)
 				require.NoError(b, errCrIngestor)
 				require.NotNil(b, ingestor)

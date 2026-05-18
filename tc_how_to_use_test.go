@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	log "github.com/tudorhulban/arenalog"
+	"github.com/tudorhulban/arenalog"
 	"github.com/tudorhulban/bytearena"
 )
 
@@ -24,20 +24,20 @@ func TestArenalog_HowToUse(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	chIngestionEnd := ingestor.StartIngestion(ctx)
 
-	logger, errCrLogger := log.NewLogger(
-		&log.ParamsNewLogger{
+	logger, errCrLogger := arenalog.NewLogger(
+		&arenalog.ParamsNewLogger{
 			Ingestor:    ingestor,
-			LoggerLevel: log.LevelInfo,
+			LoggerLevel: arenalog.LevelInfo,
 
 			WithFatalWriter: os.Stdout,
 			WithJSON:        true,
 		},
 
-		log.WithTimestampRFC3339UTC(t.Context()),
+		arenalog.WithTimestampRFC3339UTC(t.Context()),
 	)
 	require.NoError(t, errCrLogger)
 
-	logContext := log.NewLogContext(logger)
+	logContext := arenalog.NewLogContext(logger)
 
 	entry := logContext.WithString("area", "some area")
 	entry.Info().Msg("benchmark test")

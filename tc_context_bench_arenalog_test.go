@@ -302,72 +302,77 @@ func BenchmarkContext_WithJSON_MultipleFields(b *testing.B) {
 	}
 }
 
-// cpu: AMD Ryzen 5 5600U with Radeon Graphics
-// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=1-12         	16060803	        75.94 ns/op	       0 B/op	       0 allocs/op
-// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=2-12         	19532457	        61.69 ns/op	       0 B/op	       0 allocs/op
-// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=3-12         	14725862	        81.01 ns/op	       0 B/op	       0 allocs/op
-// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=4-12         	14204284	        82.44 ns/op	       0 B/op	       0 allocs/op
+// cpu: AMD Ryzen 7 5800H with Radeon Graphics
+// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=1-16         	16182062	        75.53 ns/op	       0 B/op	       0 allocs/op
+// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=2-16         	18008524	        72.07 ns/op	       0 B/op	       0 allocs/op
+// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=3-16         	17262482	        70.27 ns/op	       0 B/op	       0 allocs/op
+// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=4-16         	15265447	        76.54 ns/op	       0 B/op	       0 allocs/op
+// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=8-16         	17359221	        73.10 ns/op	       0 B/op	       0 allocs/op
 
 func BenchmarkArenalog_MultipleFields_Parallel(b *testing.B) {
-	gomaxprocsValues := []int{1, 2, 3, 4}
-
+	gomaxprocsValues := []int{1, 2, 3, 4, 8}
 	writer := helpers.CountWriterNoBuffer{}
-
-	ingestor, errCrIngestor := bytearena.NewIngestor(
-		bytearena.Size100K(),
-		&writer,
-	)
-	require.NoError(b, errCrIngestor)
-	require.NotNil(b, ingestor)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	chIngestionEnd := ingestor.StartIngestion(ctx)
-
-	// keep ingestion running for the whole benchmark
-	defer func() {
-		cancel()
-		<-chIngestionEnd
-	}()
-
-	logger, errCrLogger := NewLogger(
-		&ParamsNewLogger{
-			Ingestor:        ingestor,
-			LoggerLevel:     LevelDebug,
-			WithFatalWriter: os.Stdout,
-			WithJSON:        true,
-		},
-
-		WithTimestampRFC3339UTC(b.Context()),
-	)
-	require.NoError(b, errCrLogger)
-
-	logContext := NewLogContext(logger).
-		WithRoot("service", "auth").
-		SetInt("req_id", 12345).
-		SetBool("cache_hit", true)
-
-	runtime.GC()
-
-	// warm up
-	for i := 0; i < runtime.GOMAXPROCS(0)*4; i++ {
-		e, _ := entryPool.Get().(*Entry) //nolint:revive
-		entryPool.Put(e)
-	}
-
-	var warmupBuffer []byte
-	timestamp.TimestampRFC3339UTC(warmupBuffer)
-
-	time.Sleep(10 * time.Millisecond)
 
 	b.SetParallelism(1)
 
 	for _, g := range gomaxprocsValues {
-		inner := g
+		ingestor, errCrIngestor := bytearena.NewIngestor(
+			bytearena.Size100K(),
+			&writer,
+
+			helpers.TernaryWithValueIn(
+				[]int{1},
+				g,
+				nil,
+				bytearena.WithCounterCoreCPU(),
+			),
+		)
+		require.NoError(b, errCrIngestor)
+		require.NotNil(b, ingestor)
+
+		ctx, cancel := context.WithCancel(context.Background())
+		chIngestionEnd := ingestor.StartIngestion(ctx)
+
+		// keep ingestion running for the whole benchmark
+		defer func() { //nolint:revive
+			cancel()
+			<-chIngestionEnd
+		}()
+
+		logger, errCrLogger := NewLogger(
+			&ParamsNewLogger{
+				Ingestor:        ingestor,
+				LoggerLevel:     LevelDebug,
+				WithFatalWriter: os.Stdout,
+				WithJSON:        true,
+			},
+
+			WithTimestampRFC3339UTC(b.Context()),
+		)
+		require.NoError(b, errCrLogger)
+
+		logContext := NewLogContext(logger).
+			WithRoot("service", "auth").
+			SetInt("req_id", 12345).
+			SetBool("cache_hit", true)
+
+		// warm up
+		for i := 0; i < runtime.GOMAXPROCS(0)*4; i++ {
+			e, _ := entryPool.Get().(*Entry) //nolint:revive
+			entryPool.Put(e)
+		}
+
+		var warmupBuffer []byte
+		timestamp.TimestampRFC3339UTC(warmupBuffer)
+
+		time.Sleep(10 * time.Millisecond)
+
+		runtime.GC()
 
 		b.Run(
-			fmt.Sprintf("gomaxprocs=%d", inner),
+			fmt.Sprintf("gomaxprocs=%d", g),
 			func(b *testing.B) {
-				prev := runtime.GOMAXPROCS(inner)
+				prev := runtime.GOMAXPROCS(g)
 				defer runtime.GOMAXPROCS(prev)
 
 				b.ReportAllocs()

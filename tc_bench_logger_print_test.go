@@ -14,7 +14,7 @@ import (
 // go test -run '^$' -bench '^BenchmarkLogger_Print$' -benchmem
 
 // cpu: AMD Ryzen 7 5800H with Radeon Graphics
-// BenchmarkLogger_Print-16    	32252947	        37.98 ns/op	       0 B/op	       0 allocs/op
+// BenchmarkLogger_Print-16    	31454732	        38.31 ns/op	       0 B/op	       0 allocs/op
 func BenchmarkLogger_Print(b *testing.B) {
 	ingestor, errCrIngestor := bytearena.NewIngestor(
 		bytearena.Size100K(),

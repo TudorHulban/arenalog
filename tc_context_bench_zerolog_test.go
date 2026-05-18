@@ -119,7 +119,7 @@ func BenchmarkZerolog_WithFields(b *testing.B) {
 // BenchmarkZerolog_WithFields_Parallel/gomaxprocs=3-16         	12156778	       100.5 ns/op	       0 B/op	       0 allocs/op
 // BenchmarkZerolog_WithFields_Parallel/gomaxprocs=4-16         	15548028	        76.10 ns/op	       0 B/op	       0 allocs/op
 func BenchmarkZerolog_WithFields_Parallel(b *testing.B) {
-	gomaxprocsValues := []int{1, 2, 3, 4}
+	gomaxprocsValues := []int{1, 2, 3, 4, 8}
 
 	writer := helpers.CountWriterNoBuffer{}
 

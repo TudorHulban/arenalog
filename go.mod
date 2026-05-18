@@ -7,12 +7,12 @@ require (
 	github.com/phuslu/log v1.0.123
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.11.1
+	github.com/tudorhulban/bytearena v0.0.15-0.20260518102837-4afa028c30ee
 )
 
 require (
 	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/gofiber/fiber/v2 v2.52.12 // indirect
 	github.com/gofiber/schema v1.7.0 // indirect
 	github.com/gofiber/utils/v2 v2.0.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -22,7 +22,6 @@ require (
 	github.com/philhofer/fwd v1.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/tinylib/msgp v1.6.3 // indirect
-	github.com/tudorhulban/bytearena v0.0.15-0.20260517160201-5ff2778ae2da // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.69.0 // indirect
 	golang.org/x/crypto v0.48.0 // indirect

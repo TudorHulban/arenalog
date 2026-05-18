@@ -153,7 +153,7 @@ func BenchmarkPhuslu_WithFields(b *testing.B) {
 // BenchmarkPhuslu_WithFields_Parallel/gomaxprocs=3-16         	12984573	        92.34 ns/op	       0 B/op	       0 allocs/op
 // BenchmarkPhuslu_WithFields_Parallel/gomaxprocs=4-16         	17022438	        70.46 ns/op	       0 B/op	       0 allocs/op
 func BenchmarkPhuslu_WithFields_Parallel(b *testing.B) {
-	gomaxprocsValues := []int{1, 2, 3, 4}
+	gomaxprocsValues := []int{1, 2, 3, 4, 8}
 
 	writer := helpers.CountWriterNoBuffer{}
 
