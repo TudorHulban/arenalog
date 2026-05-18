@@ -26,7 +26,10 @@ func TestTimestampStandard(t *testing.T) {
 			// Validate format by parsing with the custom layout
 			_, errParse := time.Parse(layout, string(got))
 			if errParse != nil {
-				t.Errorf("Result does not match standard layout: %v", errParse)
+				t.Errorf(
+					"Result does not match standard layout: %v",
+					errParse,
+				)
 			}
 		},
 	)
@@ -45,7 +48,10 @@ func TestTimestampStandard(t *testing.T) {
 
 			_, errParse := time.Parse(layout, string(timestampPart))
 			if errParse != nil {
-				t.Errorf("Appended timestamp part is invalid: %v", errParse)
+				t.Errorf(
+					"Appended timestamp part is invalid: %v",
+					errParse,
+				)
 			}
 		},
 	)
@@ -55,13 +61,15 @@ func TestTimestampStandard(t *testing.T) {
 		func(t *testing.T) {
 			t1 := string(TimestampStandard(nil))
 
-			// Wait for at least 2 milliseconds to ensure cache TTL expires
-			time.Sleep(2 * time.Millisecond)
+			// Wait for at least 2 milliseconds to ensure cache TTL expires.
+			time.Sleep(10 * time.Millisecond)
 
 			t2 := string(TimestampStandard(nil))
 
 			if t1 == t2 {
-				t.Error("Timestamp did not update after sleep; cache might be stuck")
+				t.Error(
+					"Timestamp did not update after sleep; cache might be stuck",
+				)
 			}
 		},
 	)

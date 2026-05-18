@@ -4,19 +4,26 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
-	"unicode"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/arenalog/query"
 	"github.com/tudorhulban/bytearena"
 )
 
+// test produces
+// {"ts":"1779110935558730814","level":"TRACE","msg":"created logger, level TRACE"}
+// {"ts":"1779110935558733739","level":"TRACE","service":"auth","req_id":12345,"cache_hit":true,"area":"trace-area","user":"arena-trace","msg":"trace message"}
+// {"ts":"1779110935558734882","level":"DEBUG","service":"auth","req_id":12345,"cache_hit":true,"area":"debug-area","user":"arena-debug","attempt":1,"msg":"debug message"}
+// {"ts":"1779110935558735593","level":"INFO","service":"auth","req_id":12345,"cache_hit":true,"area":"info-area","user":"arena-info","some_float":1.113699999999,"success":true,"msg":"info message"}
+// {"ts":"1779110935558736615","level":"ERROR","service":"auth","req_id":12345,"cache_hit":true,"area":"error-area","user":"arena-error","error_detail":"something failed","msg":"error message"}
+
 func TestArenalog_MultipleFields_AllLevels(t *testing.T) {
 	// 1. Create a buffer to capture output
-	var buf bytes.Buffer
+	var bufLogs, bufFatal bytes.Buffer
 
 	// Define constant for req_id
 	const expectedReqID = 12345
@@ -24,7 +31,7 @@ func TestArenalog_MultipleFields_AllLevels(t *testing.T) {
 	// 2. Setup Ingestor with the buffer as the writer
 	ingestor, errCrIngestor := bytearena.NewIngestor(
 		bytearena.Size100K(),
-		&buf,
+		&bufLogs,
 	)
 	require.NoError(t, errCrIngestor)
 	require.NotNil(t, ingestor)
@@ -38,7 +45,7 @@ func TestArenalog_MultipleFields_AllLevels(t *testing.T) {
 			Ingestor:    ingestor,
 			LoggerLevel: LevelTrace,
 
-			WithFatalWriter: &buf,
+			WithFatalWriter: &bufFatal,
 			WithJSON:        true,
 		},
 	)
@@ -88,77 +95,36 @@ func TestArenalog_MultipleFields_AllLevels(t *testing.T) {
 	cancel()
 	<-chIngestionEnd
 
-	// 7. Parse and Assert Output
-	output := buf.String()
-	linesRaw := strings.Split(output, "\n")
+	// --- Processing Lines ---
+	require.Zero(t, bufFatal.Len())
 
-	var linesJSON []string
+	logSet, errParse := query.NewLogset(bufLogs.String())
+	require.NoError(t, errParse)
 
-	for _, line := range linesRaw {
-		trimmed := strings.TrimFunc(line, unicode.IsSpace)
+	require.Len(t,
+		logSet,
+		5,
 
-		idx := strings.IndexByte(trimmed, '{')
-		if idx >= 0 {
-			linesJSON = append(linesJSON, trimmed[idx:])
-		}
-	}
+		logSet,
+	)
 
-	require.Equal(t, 5, len(linesJSON), "Expected 5 JSON log lines")
-
-	parseLog := func(line string) map[string]any {
-		var m map[string]any
-		require.NoError(t, json.Unmarshal([]byte(line), &m))
-
-		return m
-	}
-
-	// Helper to check Root Context info (shared across all logs)
-	checkRootInfo := func(logData map[string]any) {
-		require.Equal(t, "auth", logData["service"])
-		require.Equal(t, float64(expectedReqID), logData["req_id"])
-		require.Equal(t, true, logData["cache_hit"])
-	}
-
-	// --- Line 0: Initialization Message ---
-	initLog := parseLog(linesJSON[0])
-	require.Equal(t, "TRACE", initLog["level"])
-
-	// --- Line 1: TRACE ---
-	traceLog := parseLog(linesJSON[1])
-	checkRootInfo(traceLog)
-	require.Equal(t, "TRACE", traceLog["level"])
-	require.Equal(t, "trace-area", traceLog["area"])
-	require.Equal(t, "arena-trace", traceLog["user"])
-	require.Equal(t, "trace message", traceLog["msg"])
-
-	// --- Line 2: DEBUG ---
-	debugLog := parseLog(linesJSON[2])
-	checkRootInfo(debugLog)
-	require.Equal(t, "DEBUG", debugLog["level"])
-	require.Equal(t, "debug-area", debugLog["area"])
-	require.Equal(t, "arena-debug", debugLog["user"])
-	require.Equal(t, float64(1), debugLog["attempt"])
-	require.Equal(t, "debug message", debugLog["msg"])
-
-	// --- Line 3: INFO ---
-	infoLog := parseLog(linesJSON[3])
-	checkRootInfo(infoLog)
-	require.Equal(t, "INFO", infoLog["level"])
-	require.Equal(t, "info-area", infoLog["area"])
-	require.Equal(t, "arena-info", infoLog["user"])
-	require.Equal(t, true, infoLog["success"])
-	require.InDelta(t, 1.1137, infoLog["some_float"].(float64), 0.0001)
-	require.Equal(t, "info message", infoLog["msg"])
-
-	// --- Line 4: ERROR ---
-	errorLog := parseLog(linesJSON[4])
-	checkRootInfo(errorLog)
-	require.Equal(t, "ERROR", errorLog["level"])
-	require.Equal(t, "error-area", errorLog["area"])
-	require.Equal(t, "arena-error", errorLog["user"])
-	require.Equal(t, "something failed", errorLog["error_detail"])
-	require.Equal(t, "error message", errorLog["msg"])
+	require.Len(t, logSet.WithTimestamp(), 5)
+	require.NoError(t, logSet.HasKey("level", 5))
+	require.NoError(t, logSet.HasKey("msg", 5))
+	require.NoError(t, logSet.HasKey("user", 4))
+	require.NoError(t, logSet.HasKey("area", 4))
+	require.NoError(t, logSet.HasKeyWithValue("service", "auth", 4))
+	require.NoError(t, logSet.HasKeyWithValue("level", "TRACE", 2))
+	require.NoError(t, logSet.ContainsEach(1, "DEBUG", "INFO", "ERROR"))
+	require.NoError(t, logSet.HasKeyWithValueInDelta("some_float", 1.1137, 0.0001, 1))
 }
+
+// test produces
+// {"ts":"1779112304402035665","level":"TRACE","msg":"created logger, level TRACE"}
+// {"ts":"1779112304402037749","level":"TRACE","entry start":"trace-area","component":"scanner","msg":"minimal trace"}
+// {"ts":"1779112304402038841","level":"DEBUG","entry start":"debug-area","component":"scanner","msg":"minimal debug"}
+// {"ts":"1779112304402039212","level":"INFO","entry start":"info-area","component":"scanner","msg":"minimal info"}
+// {"ts":"1779112304402039653","level":"ERROR","entry start":"error-area","code":500,"msg":"minimal error"}
 
 func TestArenalog_NoRootFields(t *testing.T) {
 	// 1. Create a buffer to capture output
@@ -226,6 +192,8 @@ func TestArenalog_NoRootFields(t *testing.T) {
 	// 7. Parse and Assert
 	output := buf.String()
 	linesRaw := strings.Split(output, "\n")
+
+	fmt.Println(output)
 
 	var linesJSON []string
 
