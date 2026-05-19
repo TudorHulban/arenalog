@@ -53,11 +53,11 @@ func TestArenalog_OneField(t *testing.T) {
 
 // go test -run '^$' -bench '^BenchmarkArenalog_OneField$' -benchmem -memprofile=mem.prof -cpuprofile=cpu.prof
 
-// cpu: AMD Ryzen 5 5600U with Radeon Graphics
-// BenchmarkArenalog_OneField/G1-12 	18744702	        64.20 ns/op	       0 B/op	       0 allocs/op
-// BenchmarkArenalog_OneField/G2-12 	11996622	       100.5 ns/op	       6 B/op	       0 allocs/op
-// BenchmarkArenalog_OneField/G3-12 	11811764	       100.9 ns/op	       6 B/op	       0 allocs/op
-// BenchmarkArenalog_OneField/G4-12 	11488641	       101.7 ns/op	       6 B/op	       0 allocs/op
+// cpu: AMD Ryzen 7 5800H with Radeon Graphics
+// BenchmarkArenalog_OneField/G1-16 	18887769	        61.41 ns/op	       0 B/op	       0 allocs/op
+// BenchmarkArenalog_OneField/G2-16 	12352900	        96.42 ns/op	       5 B/op	       0 allocs/op
+// BenchmarkArenalog_OneField/G3-16 	12475086	        95.51 ns/op	       5 B/op	       0 allocs/op
+// BenchmarkArenalog_OneField/G4-16 	12511933	        96.82 ns/op	       5 B/op	       0 allocs/op
 
 func BenchmarkArenalog_OneField(b *testing.B) {
 	gomaxprocsValues := []int{1, 2, 3, 4}
@@ -69,6 +69,8 @@ func BenchmarkArenalog_OneField(b *testing.B) {
 			func(b *testing.B) {
 				prev := runtime.GOMAXPROCS(g)
 				defer runtime.GOMAXPROCS(prev)
+
+				defer writer.Reset()
 
 				ingestor, errCrIngestor := bytearena.NewIngestor(
 					bytearena.Size100K(),
@@ -180,7 +182,7 @@ func TestArenalog_MultipleFields(t *testing.T) {
 // BenchmarkContext_NoJSON_MultipleFields-12    	11057649	       110.6 ns/op	       4 B/op	       0 allocs/op
 
 func BenchmarkContext_NoJSON_MultipleFields(b *testing.B) {
-	var writer helpers.NoopWriter
+	var writer helpers.CountWriterNoBuffer
 
 	ingestor, errCrIngestor := bytearena.NewIngestor(bytearena.Size100K(), &writer)
 	require.NoError(b, errCrIngestor)
@@ -238,15 +240,22 @@ func BenchmarkContext_NoJSON_MultipleFields(b *testing.B) {
 		// 2. Print
 		entry.Msg("benchmark test")
 	}
+
+	require.NotZero(b,
+		writer.TotalBytesWritten.Load(),
+	)
 }
 
-// cpu: AMD Ryzen 5 5600U with Radeon Graphics
-// BenchmarkContext_WithJSON_MultipleFields-12    	 8336259	       146.6 ns/op	       6 B/op	       0 allocs/op
+// cpu: AMD Ryzen 7 5800H with Radeon Graphics
+// BenchmarkContext_WithJSON_MultipleFields-16    	 9249074	       132.0 ns/op	       6 B/op	       0 allocs/op
 
 func BenchmarkContext_WithJSON_MultipleFields(b *testing.B) {
-	var writer helpers.NoopWriter
+	var writer helpers.CountWriterNoBuffer
 
-	ingestor, errCrIngestor := bytearena.NewIngestor(bytearena.Size100K(), &writer)
+	ingestor, errCrIngestor := bytearena.NewIngestor(
+		bytearena.Size100K(),
+		&writer,
+	)
 	require.NoError(b, errCrIngestor)
 	require.NotNil(b, ingestor)
 
@@ -303,14 +312,18 @@ func BenchmarkContext_WithJSON_MultipleFields(b *testing.B) {
 		// 2. Print
 		entry.Msg("benchmark test")
 	}
+
+	require.NotZero(b,
+		writer.TotalBytesWritten.Load(),
+	)
 }
 
 // cpu: AMD Ryzen 7 5800H with Radeon Graphics
-// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=1-16         	16182062	        75.53 ns/op	       0 B/op	       0 allocs/op
-// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=2-16         	18008524	        72.07 ns/op	       0 B/op	       0 allocs/op
-// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=3-16         	17262482	        70.27 ns/op	       0 B/op	       0 allocs/op
-// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=4-16         	15265447	        76.54 ns/op	       0 B/op	       0 allocs/op
-// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=8-16         	17359221	        73.10 ns/op	       0 B/op	       0 allocs/op
+// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=1-16         	15236788	        77.91 ns/op	       0 B/op	       0 allocs/op
+// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=2-16         	17088480	        69.81 ns/op	       0 B/op	       0 allocs/op
+// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=3-16         	16710151	        71.72 ns/op	       0 B/op	       0 allocs/op
+// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=4-16         	15545319	        77.55 ns/op	       0 B/op	       0 allocs/op
+// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=8-16         	16813531	        72.84 ns/op	       0 B/op	       0 allocs/op
 
 func BenchmarkArenalog_MultipleFields_Parallel(b *testing.B) {
 	gomaxprocsValues := []int{1, 2, 3, 4, 8}
@@ -335,12 +348,6 @@ func BenchmarkArenalog_MultipleFields_Parallel(b *testing.B) {
 
 		ctx, cancel := context.WithCancel(context.Background())
 		chIngestionEnd := ingestor.StartIngestion(ctx)
-
-		// keep ingestion running for the whole benchmark
-		defer func() { //nolint:revive
-			cancel()
-			<-chIngestionEnd
-		}()
 
 		logger, errCrLogger := NewLogger(
 			&ParamsNewLogger{
@@ -401,11 +408,15 @@ func BenchmarkArenalog_MultipleFields_Parallel(b *testing.B) {
 				)
 			},
 		)
-	}
 
-	require.NotZero(
-		b,
-		writer.TotalBytesWritten.Load(),
-		"1. writer must record bytes",
-	)
+		cancel()
+		<-chIngestionEnd
+
+		require.NotZero(b,
+			writer.TotalBytesWritten.Load(),
+			"writer must record bytes",
+		)
+
+		writer.Reset()
+	}
 }
