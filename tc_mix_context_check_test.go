@@ -3,10 +3,7 @@ package arenalog
 import (
 	"bytes"
 	"context"
-	"encoding/json"
-	"fmt"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -128,12 +125,12 @@ func TestArenalog_MultipleFields_AllLevels(t *testing.T) {
 
 func TestArenalog_NoRootFields(t *testing.T) {
 	// 1. Create a buffer to capture output
-	var buf bytes.Buffer
+	var bufLogs, bufFatal bytes.Buffer
 
 	// 2. Setup Ingestor
 	ingestor, errCrIngestor := bytearena.NewIngestor(
 		bytearena.Size100K(),
-		&buf,
+		&bufLogs,
 	)
 	require.NoError(t, errCrIngestor)
 
@@ -146,7 +143,7 @@ func TestArenalog_NoRootFields(t *testing.T) {
 			Ingestor:    ingestor,
 			LoggerLevel: LevelTrace,
 
-			WithFatalWriter: &buf,
+			WithFatalWriter: &bufFatal,
 			WithJSON:        true,
 		},
 	)
@@ -185,70 +182,37 @@ func TestArenalog_NoRootFields(t *testing.T) {
 		WithInt("code", 500).
 		Msg("minimal error")
 
-	// 6. Stop Ingestor
+		// 6. Stop Ingestor and Wait for flush
 	cancel()
 	<-chIngestionEnd
 
-	// 7. Parse and Assert
-	output := buf.String()
-	linesRaw := strings.Split(output, "\n")
+	// --- Processing Lines ---
+	require.Zero(t, bufFatal.Len())
 
-	fmt.Println(output)
+	logSet, errParse := query.NewLogset(bufLogs.String())
+	require.NoError(t, errParse)
 
-	var linesJSON []string
+	require.Len(t,
+		logSet,
+		5,
 
-	for _, line := range linesRaw {
-		trimmed := strings.TrimSpace(line)
+		logSet,
+	)
 
-		if strings.Contains(trimmed, "{") {
-			linesJSON = append(linesJSON, trimmed[strings.Index(trimmed, "{"):]) //nolint:gocritic
-		}
-	}
-
-	// Expect 5 lines: 1 Init + 4 Log messages
-	require.Equal(t, 5, len(linesJSON))
-
-	parseLog := func(line string) map[string]any {
-		var m map[string]any
-		require.NoError(t, json.Unmarshal([]byte(line), &m))
-
-		return m
-	}
+	require.Len(t, logSet.WithTimestamp(), 5)
+	require.NoError(t, logSet.HasKey("level", 5))
+	require.NoError(t, logSet.HasKey("msg", 5))
 
 	// Helper to ensure root fields from previous tests ARE NOT present
-	assertNoRootFields := func(logData map[string]any) {
-		require.Nil(t, logData["service"], "Root field 'service' should not exist")
-		require.Nil(t, logData["req_id"], "Root field 'req_id' should not exist")
-		require.Nil(t, logData["cache_hit"], "Root field 'cache_hit' should not exist")
-	}
+	require.Error(t, logSet.HasKey("service", 1))
+	require.Error(t, logSet.HasKey("req_id", 1))
+	require.Error(t, logSet.HasKey("cache_hit", 1))
 
-	// --- verify TRACE ---
-	traceLog := parseLog(linesJSON[1])
-	assertNoRootFields(traceLog)
-	require.Equal(t, "TRACE", traceLog["level"])
-	require.Equal(t, "scanner", traceLog["component"]) // Entry Info
-	require.Equal(t, "minimal trace", traceLog["msg"])
-
-	// --- verify DEBUG ---
-	debugLog := parseLog(linesJSON[2])
-	assertNoRootFields(debugLog)
-	require.Equal(t, "DEBUG", debugLog["level"])
-	require.Equal(t, "scanner", debugLog["component"]) // Entry Info
-	require.Equal(t, "minimal debug", debugLog["msg"])
-
-	// --- verify INFO ---
-	infoLog := parseLog(linesJSON[3])
-	assertNoRootFields(infoLog)
-	require.Equal(t, "INFO", infoLog["level"])
-	require.Equal(t, "scanner", infoLog["component"]) // Entry Info
-	require.Equal(t, "minimal info", infoLog["msg"])
-
-	// --- verify ERROR ---
-	errorLog := parseLog(linesJSON[4])
-	assertNoRootFields(errorLog)
-	require.Equal(t, "ERROR", errorLog["level"])
-	require.Equal(t, float64(500), errorLog["code"]) // Entry Info
-	require.Equal(t, "minimal error", errorLog["msg"])
+	// remaining info
+	require.NoError(t, logSet.HasKeyWithValue("level", "TRACE", 2))
+	require.NoError(t, logSet.ContainsEach(1, "DEBUG", "INFO", "ERROR"))
+	require.NoError(t, logSet.HasKeyWithValue("code", 500, 1))
+	require.NoError(t, logSet.HasKeyWithValueLike("msg", "minimal", 4))
 }
 
 // test produces
