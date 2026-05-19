@@ -98,6 +98,7 @@ func BenchmarkArenalog_OneField(b *testing.B) {
 
 				runtime.GC()
 
+				// warm up the pool
 				for i := 0; i < runtime.GOMAXPROCS(0)*4; i++ {
 					e, _ := entryPool.Get().(*Entry) //nolint:revive
 					entryPool.Put(e)
@@ -212,6 +213,7 @@ func BenchmarkContext_NoJSON_MultipleFields(b *testing.B) {
 
 	runtime.GC()
 
+	// warm up the pool
 	for i := 0; i < runtime.GOMAXPROCS(0)*4; i++ {
 		e, _ := entryPool.Get().(*Entry) //nolint:revive
 		entryPool.Put(e)
@@ -276,6 +278,7 @@ func BenchmarkContext_WithJSON_MultipleFields(b *testing.B) {
 
 	runtime.GC()
 
+	// warm up the pool
 	for i := 0; i < runtime.GOMAXPROCS(0)*4; i++ {
 		e, _ := entryPool.Get().(*Entry) //nolint:revive
 		entryPool.Put(e)
@@ -356,7 +359,9 @@ func BenchmarkArenalog_MultipleFields_Parallel(b *testing.B) {
 			SetInt("req_id", 12345).
 			SetBool("cache_hit", true)
 
-		// warm up
+		runtime.GC()
+
+		// warm up the pool
 		for i := 0; i < runtime.GOMAXPROCS(0)*4; i++ {
 			e, _ := entryPool.Get().(*Entry) //nolint:revive
 			entryPool.Put(e)
@@ -366,8 +371,6 @@ func BenchmarkArenalog_MultipleFields_Parallel(b *testing.B) {
 		timestamp.TimestampRFC3339UTC(warmupBuffer)
 
 		time.Sleep(10 * time.Millisecond)
-
-		runtime.GC()
 
 		b.Run(
 			fmt.Sprintf("gomaxprocs=%d", g),

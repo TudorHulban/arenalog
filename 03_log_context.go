@@ -129,7 +129,10 @@ func (ctx *LogContext) Reset() {
 }
 
 func (ctx *LogContext) With(key string, value any) *Entry {
-	e, _ := entryPool.Get().(*Entry) //nolint:revive
+	e, couldRetrieve := entryPool.Get().(*Entry)
+	if !couldRetrieve || e == nil {
+		e = &Entry{}
+	}
 
 	e.formatter = ctx
 	e.fieldCount = 0
@@ -141,7 +144,10 @@ func (ctx *LogContext) With(key string, value any) *Entry {
 }
 
 func (ctx *LogContext) WithString(key, value string) *Entry {
-	e, _ := entryPool.Get().(*Entry) //nolint:revive
+	e, couldRetrieve := entryPool.Get().(*Entry)
+	if !couldRetrieve || e == nil {
+		e = &Entry{}
+	}
 
 	e.formatter = ctx
 	e.fieldCount = 0
@@ -156,7 +162,10 @@ func (ctx *LogContext) WithString(key, value string) *Entry {
 }
 
 func (ctx *LogContext) WithInt(key string, value int64) *Entry {
-	e := entryPool.Get().(*Entry) //nolint:revive
+	e, couldRetrieve := entryPool.Get().(*Entry)
+	if !couldRetrieve || e == nil {
+		e = &Entry{}
+	}
 
 	e.formatter = ctx
 	e.fieldCount = 0
@@ -171,7 +180,10 @@ func (ctx *LogContext) WithInt(key string, value int64) *Entry {
 }
 
 func (ctx *LogContext) WithFloat(key string, value float64) *Entry {
-	e := entryPool.Get().(*Entry) //nolint:revive
+	e, couldRetrieve := entryPool.Get().(*Entry)
+	if !couldRetrieve || e == nil {
+		e = &Entry{}
+	}
 
 	e.formatter = ctx
 	e.fieldCount = 0
@@ -186,7 +198,10 @@ func (ctx *LogContext) WithFloat(key string, value float64) *Entry {
 }
 
 func (ctx *LogContext) WithBool(key string, value bool) *Entry {
-	e := entryPool.Get().(*Entry) //nolint:revive
+	e, couldRetrieve := entryPool.Get().(*Entry)
+	if !couldRetrieve || e == nil {
+		e = &Entry{}
+	}
 
 	e.formatter = ctx
 	e.fieldCount = 0
