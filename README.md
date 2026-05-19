@@ -4,14 +4,13 @@ Arenalog is a high‑performance structured logger engineered for workloads wher
 logging must remain predictable, low‑latency, and never become a burden inside
 constrained environments.
 
-Benchmark numbers show that normal applications can rely on Arenalog for all their
-logging without dedicating more than one core. When running on more than one core the possible slowdown reflects Arenalog’s design choice: it prioritizes single‑core determinism over multi‑core scaling.
+Benchmark numbers show that normal applications running on hosts with one core can rely on Arenalog for all their logging. When running on more than one core the possible slowdown reflects Arenalog’s design choice: it prioritizes single‑core determinism over multi‑core scaling.
 
 Design goals:
 
 - deterministic behavior under load
 - minimal branching
-- zero allocations in the hot path
+- zero or minimal allocations in the hot path
 - minimal GC interaction
 - predictable latency
 - optimized for 1‑core execution
@@ -20,8 +19,7 @@ Design goals:
 
 When to choose Arenalog:
 
-- two threads containers where one thread shares the business logic with arenalog
-and the other thread can run business logic 100%.
+- apps that run in in one core hosts
 - CPU‑bound or latency‑sensitive systems
 - constrained hardware
 - environments where multi‑core scaling is irrelevant or undesirable
@@ -31,6 +29,7 @@ Examples:
 - embedded systems
 - edge devices
 - proxies and gateways
+- sidecars
 - serverless cold starts
 - real‑time telemetry
 - game engines

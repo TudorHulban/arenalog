@@ -10,8 +10,10 @@ import (
 	"github.com/tudorhulban/bytearena"
 )
 
-// {"ts":"2026-05-15T13:50:44.712Z","level":"INFO","msg":"created logger, level INFO"}
-// {"ts":"2026-05-15T13:50:44.712Z","level":"INFO","area":"some area","msg":"benchmark test"}
+// test produces
+// {"ts":"2026-05-19T13:56:10.288Z","level":"INFO","msg":"created logger, level INFO"}
+// {"ts":"2026-05-19T13:56:10.288Z","level":"INFO","msg":"logger ready"}
+// {"ts":"2026-05-19T13:56:10.288Z","level":"INFO","service":"auth","area":"some area","msg":"benchmark test"}
 
 func TestArenalog_HowToUse(t *testing.T) {
 	ingestor, errCrIngestor := bytearena.NewIngestor(
@@ -37,7 +39,10 @@ func TestArenalog_HowToUse(t *testing.T) {
 	)
 	require.NoError(t, errCrLogger)
 
-	logContext := arenalog.NewLogContext(logger)
+	logger.Info("logger ready")
+
+	logContext := arenalog.NewLogContext(logger).
+		WithRoot("service", "auth")
 
 	entry := logContext.WithString("area", "some area")
 	entry.Info().Msg("benchmark test")

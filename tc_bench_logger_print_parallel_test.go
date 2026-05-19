@@ -21,7 +21,10 @@ func BenchmarkLogger_Parallel_PrintRaw(b *testing.B) {
 
 	writer := helpers.CountWriterNoBuffer{}
 
-	ingestor, errCrIngestor := bytearena.NewIngestor(bytearena.Size100K(), &writer)
+	ingestor, errCrIngestor := bytearena.NewIngestor(
+		bytearena.Size100K(),
+		&writer,
+	)
 	require.NoError(b, errCrIngestor)
 	require.NotNil(b, ingestor)
 

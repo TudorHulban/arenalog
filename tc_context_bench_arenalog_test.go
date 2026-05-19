@@ -319,11 +319,11 @@ func BenchmarkContext_WithJSON_MultipleFields(b *testing.B) {
 }
 
 // cpu: AMD Ryzen 7 5800H with Radeon Graphics
-// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=1-16         	15236788	        77.91 ns/op	       0 B/op	       0 allocs/op
-// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=2-16         	17088480	        69.81 ns/op	       0 B/op	       0 allocs/op
-// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=3-16         	16710151	        71.72 ns/op	       0 B/op	       0 allocs/op
-// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=4-16         	15545319	        77.55 ns/op	       0 B/op	       0 allocs/op
-// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=8-16         	16813531	        72.84 ns/op	       0 B/op	       0 allocs/op
+// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=1-16         	15310951	        76.55 ns/op	       0 B/op	       0 allocs/op
+// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=2-16         	17851222	        66.67 ns/op	       0 B/op	       0 allocs/op
+// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=3-16         	16263550	        74.16 ns/op	       0 B/op	       0 allocs/op
+// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=4-16         	15345500	        76.67 ns/op	       0 B/op	       0 allocs/op
+// BenchmarkArenalog_MultipleFields_Parallel/gomaxprocs=8-16         	16770168	        73.00 ns/op	       0 B/op	       0 allocs/op
 
 func BenchmarkArenalog_MultipleFields_Parallel(b *testing.B) {
 	gomaxprocsValues := []int{1, 2, 3, 4, 8}
