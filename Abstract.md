@@ -35,7 +35,7 @@ By default the ingestor is optimized for one core hosts (ex. `docker run --rm --
 
 ```go
 ingestor, errCrIngestor := bytearena.NewIngestor(
-			bytearena.Size100K(),
+			bytearena.Size100K(),// ingestor uses two arenas of size
 			&writer,
 
 			helpers.TernaryWithValueIn(
@@ -143,7 +143,7 @@ Is scoring as below:
 ## When NOT to Use Arenalog
 
 Arenalog prioritizes per-call latency on 1–2 core hosts. If you are running on 8+ core machines and need maximum aggregate throughput, a batched, multi-worker logger may still be more efficient.  
-Note that logs may be dropped under backpressure. Backpressure could be measured for specific cases, but on modern CPUs, a safe harbour value should be above one million logs per second per core.
+Note that logs may be dropped under backpressure. Backpressure could be measured for specific cases, but on modern CPUs, a safe harbour value should be above one million logs per second per core if the arena size corresponds to the payloads velocity.
 
 ## Source
 
