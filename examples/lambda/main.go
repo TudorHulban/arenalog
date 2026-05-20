@@ -32,7 +32,10 @@ type app struct {
 
 // This is your actual logic you want to benchmark
 func (a *app) HandleRequest(ctx context.Context) (string, error) {
-	a.l.Info("request")
+	a.l.Infof(
+		"request on %d cpu(s)",
+		runtime.NumCPU(),
+	)
 
 	// Read live memory allocator statistics
 	var m runtime.MemStats
