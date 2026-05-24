@@ -61,15 +61,18 @@ func TestTimestampYYYYMonth(t *testing.T) {
 			// First capture
 			t1 := string(TimestampYYYYMonth(nil))
 
+			noMsSleep := 10
+
 			// Sleep to bypass the 1ms gateStandard.CompareAndSwap
-			time.Sleep(2 * time.Millisecond)
+			time.Sleep(time.Duration(noMsSleep) * time.Millisecond)
 
 			// Second capture
 			t2 := string(TimestampYYYYMonth(nil))
 
 			if t1 == t2 {
 				t.Errorf(
-					"Cache failed to update after 2ms sleep.\nT1: %s\nT2: %s",
+					"Cache failed to update after %dms sleep.\nT1: %s\nT2: %s",
+					noMsSleep,
 					t1,
 					t2,
 				)
