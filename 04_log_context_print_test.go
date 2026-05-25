@@ -3,6 +3,7 @@ package arenalog
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -157,6 +158,7 @@ func TestContext_Raw_Print(t *testing.T) {
 	f.Print("xxx1")
 	f.SetString("area", "some area")
 	f.Print("login ok again")
+	f.Prints("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
 
 	go func() {
 		f.With("xxxxxxxxxxxxx", "2").
@@ -178,6 +180,8 @@ func TestContext_Raw_Print(t *testing.T) {
 
 	// --- Processing Lines ---
 	require.Zero(t, bufFatal.Len())
+
+	fmt.Println(bufLogs.String())
 
 	logSet, errParse := query.NewRawset(bufLogs.String())
 	require.NoError(t, errParse)

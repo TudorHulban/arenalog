@@ -49,7 +49,7 @@ func (l *Logger) Infow(msg string, keysAndValues ...any) {
 	l.logwWithLabel(
 		l.labelInfo(),
 		msg,
-		uint32(len(msg))+helpers.GetEstimatedMessageSize("", keysAndValues),
+		uint32(len(msg))+helpers.GetEstimatedArgsSize(keysAndValues),
 		keysAndValues...,
 	)
 }

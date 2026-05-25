@@ -6,6 +6,72 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestGetEstimatedFormatless(t *testing.T) {
+	tests := []struct {
+		description string
+		args        []any
+		expected    uint32
+	}{
+		{
+			description: "1. single long string argument",
+			args:        []any{"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"},
+			expected:    33, // Only the string, no separators needed
+		},
+		{
+			description: "2. multiple string arguments with separator spaces",
+			args:        []any{"abc", "def"},
+			expected:    7, // len("abc") + len("def") + 1 separator space = 7
+		},
+		{
+			description: "3. mixed string and float64",
+			args:        []any{"abc", 2.1},
+			expected:    7, // len("abc") + len("2.1") + 1 separator space = 7
+		},
+		{
+			description: "4. empty args slice",
+			args:        []any{},
+			expected:    0,
+		},
+		{
+			description: "5. single negative integer",
+			args:        []any{-420},
+			expected:    4, // len("-420") = 4
+		},
+		{
+			description: "6. booleans",
+			args:        []any{true, false},
+			expected:    10, // len("true") + len("false") + 1 separator space = 10
+		},
+		{
+			description: "7. handling nil value",
+			args:        []any{nil},
+			expected:    4, // len("<nil>") = 4
+		},
+		{
+			description: "8. complex type fallback",
+			args:        []any{struct{ ID int }{ID: 9}},
+			expected:    3, // fmt.Sprint output is "{9}", len = 3
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(
+			tc.description,
+			func(t *testing.T) {
+				estimated := GetEstimatedArgsSize(tc.args)
+				if estimated != tc.expected {
+					t.Errorf(
+						"expected: %d versus estimated: %d for args %v",
+						tc.expected,
+						estimated,
+						tc.args,
+					)
+				}
+			},
+		)
+	}
+}
+
 func TestGetEstimatedMessageSize(t *testing.T) {
 	tests := []struct {
 		description string
@@ -14,10 +80,10 @@ func TestGetEstimatedMessageSize(t *testing.T) {
 		expected    uint32
 	}{
 		{
-			description: "01 plain text counts characters",
-			format:      "abc",
+			description: "01a plain text counts characters",
+			format:      "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
 			args:        nil,
-			expected:    3,
+			expected:    33,
 		},
 		{
 			description: "02 percent escape sequence %% produces single percent",
@@ -56,10 +122,10 @@ func TestGetEstimatedMessageSize(t *testing.T) {
 			expected:    1, // "0"
 		},
 		{
-			description: "08 %t uses worst-case 5 (true/false worst-case)",
+			description: "08 %t",
 			format:      "%t",
 			args:        []any{true},
-			expected:    5,
+			expected:    4,
 		},
 		{
 			description: "09 %f uses float64Len conservative bound",
@@ -97,8 +163,16 @@ func TestGetEstimatedMessageSize(t *testing.T) {
 		t.Run(
 			tc.description,
 			func(t *testing.T) {
-				got := GetEstimatedMessageSize(tc.format, tc.args)
-				require.Equal(t, tc.expected, got)
+				estimated := GetEstimatedMessageSize(tc.format, tc.args)
+
+				require.Equal(t,
+					tc.expected,
+					estimated,
+
+					"expected: %d versus estimated: %d",
+					tc.expected,
+					estimated,
+				)
 			},
 		)
 	}
