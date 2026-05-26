@@ -143,7 +143,7 @@ func (ctx *LogContext) Prints(args ...any) {
 			buffer := make([]byte, 0, jsonCap)
 			buffer = ctx.logger.appendJSONRoot(
 				buffer,
-				helpers.AppendArgs(nil, args...),
+				helpers.AppendArgs(buffer, args...),
 				cfg,
 				file,
 				line,

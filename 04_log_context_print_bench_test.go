@@ -90,11 +90,14 @@ func BenchmarkLogContextPrint(b *testing.B) {
 	}
 }
 
+// go test -run '^$' -bench '^BenchmarkLogContextPrints$' -benchmem -memprofile=mem.prof -cpuprofile=cpu.prof
+// go tool pprof -alloc_objects mem.prof
+
 // cpu: AMD Ryzen 7 5800H with Radeon Graphics
-// BenchmarkLogContextPrints/G1-16 	 5843539	       203.3 ns/op	     256 B/op	       2 allocs/op
-// BenchmarkLogContextPrints/G2-16 	 9113028	       131.3 ns/op	     256 B/op	       2 allocs/op
-// BenchmarkLogContextPrints/G3-16 	11232903	       105.2 ns/op	     256 B/op	       2 allocs/op
-// BenchmarkLogContextPrints/G4-16 	12061215	        93.68 ns/op	     256 B/op	       2 allocs/op
+// BenchmarkLogContextPrints/G1-16          6298690               192.2 ns/op           224 B/op          1 allocs/op
+// BenchmarkLogContextPrints/G2-16          9553256               125.2 ns/op           224 B/op          1 allocs/op
+// BenchmarkLogContextPrints/G3-16         11730144               102.9 ns/op           224 B/op          1 allocs/op
+// BenchmarkLogContextPrints/G4-16         13050145                90.02 ns/op          224 B/op          1 allocs/op
 
 func BenchmarkLogContextPrints(b *testing.B) {
 	gomaxprocsValues := []int{1, 2, 3, 4}

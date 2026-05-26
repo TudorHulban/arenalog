@@ -176,7 +176,7 @@ func TestArenalog_MultipleFields(t *testing.T) {
 }
 
 // go test -run '^$' -bench '^BenchmarkContext_NoJSON_MultipleFields$' -benchmem -memprofile=mem.prof -cpuprofile=cpu.prof
-// go tool pprof -alloc_objects mem.out
+// go tool pprof -alloc_objects mem.prof
 
 // cpu: AMD Ryzen 5 5600U with Radeon Graphics
 // BenchmarkContext_NoJSON_MultipleFields-12    	11057649	       110.6 ns/op	       4 B/op	       0 allocs/op
