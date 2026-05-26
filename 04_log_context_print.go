@@ -114,17 +114,9 @@ func (ctx *LogContext) Print(args ...any) {
 	ctx.logger.ingestor.EndWrite(region)
 }
 
+// Prints allocates but does not estimate.
 func (ctx *LogContext) Prints(args ...any) {
 	cfg := ctx.cfg.Load()
-
-	region, errWrite := ctx.logger.ingestor.TryWrite(
-		ctx.logger.estimateTextOverhead(0, "", 0, args) + 110,
-	)
-	if errWrite != nil {
-		return
-	}
-
-	buffer := region.Buf()[:0]
 
 	if ctx.logger.withJSON {
 		var (
@@ -139,6 +131,16 @@ func (ctx *LogContext) Prints(args ...any) {
 		}
 
 		if cfg.root != nil {
+			jsonCap := 26 // Estimate JSON buffer size upfront
+
+			if ctx.logger.withCaller {
+				jsonCap = jsonCap + len(file) + 16
+			}
+
+			jsonCap = jsonCap + len(cfg.root.key) + len(cfg.root.valueString) + 32
+			jsonCap = jsonCap + (len(cfg.fields) * 48)
+
+			buffer := make([]byte, 0, jsonCap)
 			buffer = ctx.logger.appendJSONRoot(
 				buffer,
 				helpers.AppendArgs(nil, args...),
@@ -146,15 +148,44 @@ func (ctx *LogContext) Prints(args ...any) {
 				file,
 				line,
 			)
-		}
 
-		copy(region.Buf(), buffer)
-		ctx.logger.ingestor.EndWrite(region)
+			if len(buffer) == 0 {
+				return
+			}
+
+			region, errWrite := ctx.logger.ingestor.TryWrite(uint32(len(buffer)))
+			if errWrite == nil {
+				copy(region.Buf(), buffer)
+				ctx.logger.ingestor.EndWrite(region)
+			}
+		}
 
 		return
 	}
 
-	// Non‑JSON path
+	// --- Non‑JSON Path ---
+
+	// Calculate required capacity upfront to prevent growth allocations
+	initialCap := 5 // Minimum baseline
+
+	if ctx.logger.fnTimestamp != nil {
+		initialCap = initialCap + 21 // Nano timestamp string length (~20 bytes) + 1 space
+	}
+
+	if ctx.logger.withCaller {
+		initialCap = initialCap + 16 // Baseline room for file string, line number, text, and spaces
+	}
+
+	if cfg.root != nil {
+		initialCap = initialCap + len(cfg.root.key) + 32 // Key length + '=' + primitive value baseline
+	}
+
+	if len(cfg.fields) > 0 {
+		initialCap = initialCap + (len(cfg.fields) * 48)
+	}
+
+	buffer := make([]byte, 0, initialCap)
+
 	if ctx.logger.fnTimestamp != nil {
 		buffer = ctx.logger.fnTimestamp(buffer)
 		buffer = append(buffer, ' ')
@@ -201,10 +232,8 @@ func (ctx *LogContext) Prints(args ...any) {
 		switch fld.kind {
 		case kindString:
 			buffer = append(buffer, fld.valueString...)
-
 		case kindInt:
 			buffer = strconv.AppendInt(buffer, fld.valueInt, 10)
-
 		case kindBool:
 			buffer = strconv.AppendBool(buffer, fld.valueBool)
 		}
@@ -216,7 +245,15 @@ func (ctx *LogContext) Prints(args ...any) {
 	buffer = helpers.AppendArgs(buffer, args...)
 	buffer = append(buffer, '\n')
 
-	copy(region.Buf(), buffer)
+	if len(buffer) == 0 {
+		return
+	}
 
+	region, errWrite := ctx.logger.ingestor.TryWrite(uint32(len(buffer)))
+	if errWrite != nil {
+		return
+	}
+
+	copy(region.Buf(), buffer)
 	ctx.logger.ingestor.EndWrite(region)
 }
