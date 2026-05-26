@@ -7,12 +7,13 @@ import (
 
 func GetEstimatedArgsSize(args []any) uint32 {
 	var size uint32
+
 	numArgs := len(args)
 	if numArgs == 0 {
 		return 0
 	}
 
-	for i := 0; i < numArgs; i++ {
+	for i := range numArgs {
 		arg := args[i]
 		if arg == nil {
 			size = size + 4 // "<nil>"

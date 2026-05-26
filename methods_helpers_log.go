@@ -46,7 +46,8 @@ func (l *Logger) logWithLabel(label string, estimatedMessageSize uint32, args []
 
 	// Non‑JSON path
 	region, errWrite := l.ingestor.TryWrite(
-		estimatedMessageSize + _DeltaEstimation,
+		estimatedMessageSize +
+			l.estimateTextOverhead(0, callingFromFile, callingFromLine, args),
 	)
 	if errWrite != nil {
 		return
@@ -116,7 +117,8 @@ func (l *Logger) logfWithLabel(label, format string, estimatedMessageSize uint32
 
 	// Non‑JSON path
 	region, errWrite := l.ingestor.TryWrite(
-		estimatedMessageSize + _DeltaEstimation,
+		estimatedMessageSize +
+			l.estimateTextOverhead(0, callingFromFile, callingFromLine, args),
 	)
 	if errWrite != nil {
 		return
@@ -193,7 +195,8 @@ func (l *Logger) logwWithLabel(label, msg string, estimatedMessageSize uint32, k
 
 	// Non‑JSON path
 	region, errWrite := l.ingestor.TryWrite(
-		estimatedMessageSize + _DeltaEstimation,
+		estimatedMessageSize +
+			l.estimateTextOverhead(len(msg), callingFromFile, callingFromLine, keysAndValues),
 	)
 	if errWrite != nil {
 		return
@@ -228,6 +231,7 @@ func (l *Logger) logwWithLabel(label, msg string, estimatedMessageSize uint32, k
 	l.ingestor.EndWrite(region)
 }
 
+// estimateJSONOverhead includes log level label.
 func (l *Logger) estimateJSONOverhead(msgLen int, file string, line int, args []any) uint32 {
 	var size uint32 = 64 // base JSON overhead
 
@@ -302,8 +306,9 @@ func (l *Logger) estimateJSONOverhead(msgLen int, file string, line int, args []
 	return size
 }
 
+// estimateTextOverhead includes log level label.
 func (l *Logger) estimateTextOverhead(msgLen int, file string, line int, args []any) uint32 {
-	var size uint32 = 0
+	var size uint32
 
 	// 1. Timestamp (e.g., "2026-05-25T14:02:52.975Z ")
 	if l.fnTimestamp != nil {
