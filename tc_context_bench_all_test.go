@@ -21,7 +21,7 @@ import (
 func BenchmarkAll_OneField(b *testing.B) {
 	b.Run("Phuslu_OneField", BenchmarkPhuslu_OneField)
 	b.Run("Zerolog_OneField", BenchmarkZerolog_OneField)
-	b.Run("Arenalog_OneField", BenchmarkArenalog_OneField)
+	b.Run("Arenalog_OneField", BenchmarkArenalog_Msg_OneField)
 }
 
 // cpu: AMD Ryzen 7 5800H with Radeon Graphics

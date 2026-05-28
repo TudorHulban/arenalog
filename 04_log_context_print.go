@@ -131,16 +131,17 @@ func (ctx *LogContext) Prints(args ...any) {
 		}
 
 		if cfg.root != nil {
-			jsonCap := 26 // Estimate JSON buffer size upfront
+			capacityJSON := _EstimatedBaselineCapacityJSON
 
 			if ctx.logger.withCaller {
-				jsonCap = jsonCap + len(file) + 16
+				capacityJSON = capacityJSON + len(file) + 16
 			}
 
-			jsonCap = jsonCap + len(cfg.root.key) + len(cfg.root.valueString) + 32
-			jsonCap = jsonCap + (len(cfg.fields) * 48)
+			capacityJSON = capacityJSON + len(cfg.root.key) + len(cfg.root.valueString) + 32
+			capacityJSON = capacityJSON + (len(cfg.fields) * 48)
 
-			buffer := make([]byte, 0, jsonCap)
+			buffer := make([]byte, 0, capacityJSON)
+
 			buffer = ctx.logger.appendJSONRoot(
 				buffer,
 				helpers.AppendArgs(buffer, args...),
@@ -163,28 +164,28 @@ func (ctx *LogContext) Prints(args ...any) {
 		return
 	}
 
-	// --- Non‑JSON Path ---
-
-	// Calculate required capacity upfront to prevent growth allocations
-	initialCap := 5 // Minimum baseline
+	// -------------------------------------------------------------------------
+	// NON-JSON PATH
+	// -------------------------------------------------------------------------
+	capacityRaw := _EstimatedBaselineCapacityRaw
 
 	if ctx.logger.fnTimestamp != nil {
-		initialCap = initialCap + 21 // Nano timestamp string length (~20 bytes) + 1 space
+		capacityRaw = capacityRaw + 21 // Nano timestamp string length (~20 bytes) + 1 space
 	}
 
 	if ctx.logger.withCaller {
-		initialCap = initialCap + 16 // Baseline room for file string, line number, text, and spaces
+		capacityRaw = capacityRaw + 16 // Baseline room for file string, line number, text, and spaces
 	}
 
 	if cfg.root != nil {
-		initialCap = initialCap + len(cfg.root.key) + 32 // Key length + '=' + primitive value baseline
+		capacityRaw = capacityRaw + len(cfg.root.key) + 32 // Key length + '=' + primitive value baseline
 	}
 
 	if len(cfg.fields) > 0 {
-		initialCap = initialCap + (len(cfg.fields) * 48)
+		capacityRaw = capacityRaw + (len(cfg.fields) * _EstimatedBaselineFields)
 	}
 
-	buffer := make([]byte, 0, initialCap)
+	buffer := make([]byte, 0, capacityRaw)
 
 	if ctx.logger.fnTimestamp != nil {
 		buffer = ctx.logger.fnTimestamp(buffer)
