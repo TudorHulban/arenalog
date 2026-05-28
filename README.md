@@ -41,8 +41,15 @@ Arenalog achieves exceptional single-core performance and remains faster than al
 ## Architecture
 
 Arenalog consists of a formatter and an ingestor.  
-The ingestor is the bytearena at https://github.com/TudorHulban/bytearena.  
-The formatter strives zero allocations along the way for efficient operations.
+The ingestor is implemented through [bytearena](https://github.com/TudorHulban/bytearena).  
+The formatter strives for zero allocations along the way for efficient operations.  
+
+When writing to the ingestor, developers can choose between two reservation strategies:
+
+- **Upfront Reservation**: Requesting a byte portion before the log message is constructed avoids allocations entirely. However, this requires estimating the final message length. If the constructed message is shorter than reserved, it will be null-padded; if it is longer, it will be truncated.  
+
+- **Post-Construction Reservation**: Requesting the byte portion after the log message is constructed ensures the exact length is known. This eliminates the need for estimation, avoiding both padding and truncation but allocates the shell where the message was constructed.  
+This strategy is also offered by the ingestor.
 
 ## Benchmark Conditions
 
