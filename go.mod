@@ -7,7 +7,7 @@ require (
 	github.com/phuslu/log v1.0.124
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
-	github.com/tudorhulban/bytearena v0.0.17-0.20260519110606-8fa0b06e43cb
+	github.com/tudorhulban/bytearena v0.0.18-0.20260528104812-211e4a865a1e
 )
 
 require (
@@ -25,11 +25,8 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.71.0 // indirect
 	golang.org/x/crypto v0.51.0 // indirect
-	golang.org/x/mod v0.35.0 // indirect
 	golang.org/x/net v0.54.0 // indirect
-	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.44.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
-	golang.org/x/tools v0.44.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

@@ -102,6 +102,10 @@ produces a benchmark configuration that:
 - reveals true per‑operation latency
 - allows fair comparison between loggers
 
+## Legacy CPUs
+
+The ingestor used is designed for x86, Linux hosts. While optimized for modern CPUs via RDPID, it provides fallback support for legacy hardware via RDTSCP using the `-tags legacy_cpu` build flag.
+
 ## Resources
 
 ```text
