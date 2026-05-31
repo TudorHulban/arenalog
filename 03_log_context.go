@@ -30,21 +30,29 @@ func NewLogContext(logger *Logger) *LogContext {
 }
 
 func (ctx *LogContext) WithRoot(key string, value any) *LogContext {
-	old := ctx.cfg.Load()
+	for {
+		// 1. Read the current state
+		old := ctx.cfg.Load()
 
-	// copy ephemeral fields
-	newFields := make([]field, len(old.fields))
-	copy(newFields, old.fields)
+		// 2. Prepare the new state based on that reading
+		newFields := make([]field, len(old.fields))
+		copy(newFields, old.fields)
 
-	// replace root
-	ctx.cfg.Store(
-		&formatterConfig{
-			root:   makeFieldPtr(key, value),
-			fields: newFields,
-		},
-	)
+		// 3. Atomically swap ONLY if ctx.cfg is still pointing to 'old'
+		if ctx.cfg.CompareAndSwap(
+			old,
+			&formatterConfig{
+				root:   makeFieldPtr(key, value),
+				fields: newFields,
+			},
+		) {
+			return ctx // Success!
+		}
 
-	return ctx
+		// If CompareAndSwap returned false,
+		// another goroutine updated the config meanwhile.
+		// The loop will retry using the newly updated config.
+	}
 }
 
 func (ctx *LogContext) SetString(key, value string) *LogContext {

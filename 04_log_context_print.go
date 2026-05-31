@@ -7,6 +7,9 @@ import (
 	"github.com/tudorhulban/arenalog/helpers"
 )
 
+// Print padds with null if message shorter
+// or drops data exceeding the length.
+// It tries its best to estimate.
 func (ctx *LogContext) Print(args ...any) {
 	cfg := ctx.cfg.Load()
 
