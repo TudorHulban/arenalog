@@ -15,6 +15,9 @@ type Entry struct {
 
 // With allocates.
 //
+// Additional fields are silently
+// ignored if the maximum field capacity is reached.
+//
 // Passing as any, the Go compiler must box the concrete value into an interface.
 // The boxing causes a heap allocation when the value does not fit in a pointer word
 // or the compiler cannot prove it escapes to the stack only.
@@ -29,6 +32,9 @@ func (e *Entry) With(key string, value any) *Entry {
 }
 
 // WithString appends a string field without boxing value into any.
+//
+// Additional fields are silently
+// ignored if the maximum field capacity is reached.
 func (e *Entry) WithString(key, value string) *Entry {
 	if e.fieldCount < len(e.fields) {
 		e.fields[e.fieldCount] = field{
@@ -43,6 +49,8 @@ func (e *Entry) WithString(key, value string) *Entry {
 	return e
 }
 
+// Additional fields are silently
+// ignored if the maximum field capacity is reached.
 func (e *Entry) WithFloat(key string, value float64) *Entry {
 	if e.fieldCount < len(e.fields) {
 		e.fields[e.fieldCount] = field{
@@ -58,6 +66,9 @@ func (e *Entry) WithFloat(key string, value float64) *Entry {
 }
 
 // WithInt appends an int field without boxing value into any.
+//
+// Additional fields are silently
+// ignored if the maximum field capacity is reached.
 func (e *Entry) WithInt(key string, value int64) *Entry {
 	if e.fieldCount < len(e.fields) {
 		e.fields[e.fieldCount] = field{
@@ -73,6 +84,9 @@ func (e *Entry) WithInt(key string, value int64) *Entry {
 }
 
 // WithBool appends a bool field without boxing value into any.
+//
+// Additional fields are silently
+// ignored if the maximum field capacity is reached.
 func (e *Entry) WithBool(key string, value bool) *Entry {
 	if e.fieldCount < len(e.fields) {
 		e.fields[e.fieldCount] = field{
@@ -87,6 +101,8 @@ func (e *Entry) WithBool(key string, value bool) *Entry {
 	return e
 }
 
+// Additional fields are silently
+// ignored if the maximum field capacity is reached.
 func (e *Entry) WithGoroutineID() *Entry {
 	if e.fieldCount < len(e.fields) {
 		e.fields[e.fieldCount] = field{
