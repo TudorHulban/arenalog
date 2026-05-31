@@ -91,7 +91,7 @@ func (e LogSet) HasKeysWithValues(noTimes uint, kv ...any) error {
 	for _, item := range e {
 		matchAll := true
 
-		for i := 0; i < len(kv); i += 2 {
+		for i := 0; i < len(kv); i = i + 2 {
 			key, ok := kv[i].(string)
 			if !ok {
 				return fmt.Errorf(

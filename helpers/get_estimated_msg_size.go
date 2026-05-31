@@ -2,7 +2,71 @@ package helpers
 
 import (
 	"fmt"
+	"strconv"
 )
+
+func GetEstimatedArgsSize(args []any) uint32 {
+	var size uint32
+
+	numArgs := len(args)
+	if numArgs == 0 {
+		return 0
+	}
+
+	for i := range numArgs {
+		arg := args[i]
+		if arg == nil {
+			size = size + 4 // "<nil>"
+			continue
+		}
+
+		switch v := arg.(type) {
+		case string:
+			size = size + uint32(len(v))
+		case []byte:
+			size = size + uint32(len(v))
+
+		case int:
+			size = size + DigitsInt(int64(v))
+		case int64:
+			size = size + digitsInt64(v)
+		case int32:
+			size = size + digitsInt64(int64(v))
+		case int16:
+			size = size + digitsInt64(int64(v))
+		case int8:
+			size = size + digitsInt64(int64(v))
+		case uint:
+			size = size + digitsUint64(uint64(v))
+		case uint64:
+			size = size + digitsUint64(v)
+		case uint32:
+			size = size + digitsUint64(uint64(v))
+
+		case bool:
+			if v {
+				size = size + 4 // "true"
+			} else {
+				size = size + 5 // "false"
+			}
+
+		case float64:
+			size = size + uint32(len(strconv.FormatFloat(v, 'g', -1, 64)))
+		case float32:
+			size = size + uint32(len(strconv.FormatFloat(float64(v), 'g', -1, 32)))
+
+		default:
+			// Fallback for complex types (structs, maps, arrays)
+			size = size + uint32(len(fmt.Sprint(v)))
+		}
+	}
+
+	// Account for separators between arguments (e.g., spaces or commas)
+	// If mimicking fmt.Println, add 1 byte per space between arguments
+	size = size + uint32(numArgs-1)
+
+	return size
+}
 
 func GetEstimatedMessageSize(format string, args []any) uint32 {
 	var size uint32
@@ -70,7 +134,11 @@ func GetEstimatedMessageSize(format string, args []any) uint32 {
 			}
 
 		case 't':
-			size = size + 5 // true/false worst case
+			if b, ok := arg.(bool); ok && !b {
+				size = size + 5 // "false"
+			} else {
+				size = size + 4 // "true" (or fallback for invalid type)
+			}
 
 		case 'f':
 			switch v := arg.(type) {

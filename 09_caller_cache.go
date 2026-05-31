@@ -69,10 +69,14 @@ func (l *Logger) getCallerData(skip int) (string, int) {
 
 	// 2. Hash the PC
 	idx := (pc >> 4) & cacheMask
-	ptr := atomic.LoadPointer(&callerTable[idx])
 
+	ptr := atomic.LoadPointer(&callerTable[idx])
 	if ptr != nil {
 		entry := (*callerCacheEntry)(ptr)
+
+		// Race-Safe: Even if another goroutine evicts or replaces this slot in
+		// callerTable between our check and return, 'entry' points to a heap-allocated,
+		// immutable struct that cannot be garbage collected or mutated.
 		if entry.pc == pc {
 			return entry.file,
 				entry.line

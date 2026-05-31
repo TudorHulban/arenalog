@@ -101,6 +101,8 @@ func TestDirectCalls(t *testing.T) {
 	cancel()
 	<-chIngestionEnd
 
+	// fmt.Println(writer.String())
+
 	logSet, errParse := query.NewLogset(writer.String())
 	require.NoError(t, errParse)
 	require.NotEmpty(t, logSet)

@@ -59,16 +59,23 @@ func TestTimestampStandard(t *testing.T) {
 	t.Run(
 		"3. Cache Refresh (Sequential calls)",
 		func(t *testing.T) {
+			// First capture
 			t1 := string(TimestampStandard(nil))
 
-			// Wait for at least 2 milliseconds to ensure cache TTL expires.
-			time.Sleep(10 * time.Millisecond)
+			noMsSleep := 10
 
+			// Sleep to bypass the 1ms gateStandard.CompareAndSwap
+			time.Sleep(time.Duration(noMsSleep) * time.Millisecond)
+
+			// Second capture
 			t2 := string(TimestampStandard(nil))
 
 			if t1 == t2 {
-				t.Error(
-					"Timestamp did not update after sleep; cache might be stuck",
+				t.Errorf(
+					"Cache failed to update after %dms sleep.\nT1: %s\nT2: %s",
+					noMsSleep,
+					t1,
+					t2,
 				)
 			}
 		},

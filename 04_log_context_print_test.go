@@ -3,6 +3,7 @@ package arenalog
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -112,11 +113,12 @@ func TestContext_JSON_Print(t *testing.T) {
 }
 
 // test produces
-// 2026-05-12T14:06:06+03:00 /mnt/tmpfs.ramdisk/log/methods_07_print.go Line68 TRACE: created logger, level TRACE
-// 2026-05-12T14:06:06+03:00 /mnt/tmpfs.ramdisk/log/04_log_context_test.go Line152 service=auth req_id=12345 cache_hit=true root ends=here msg=xxx1
-// 2026-05-12T14:06:06+03:00 /mnt/tmpfs.ramdisk/log/04_log_context_test.go Line154 service=auth req_id=12345 cache_hit=true root ends=here area=some area msg=login ok again
-// 2026-05-12T14:06:06+03:00 level=INFO service=auth req_id=12345 cache_hit=true root ends=here area=some area zzzz=4.299999999999 g=8 msg=finished
-// 2026-05-12T14:06:06+03:00 level=ERROR service=auth req_id=12345 cache_hit=true root ends=here area=some area xxxxxxxxxxxxx=2 g=10 msg=some error
+// 2026-05-26T10:46:11.803Z /mnt/tmpfs.ramdisk/arenalog/methods_07_print.go Line68 TRACE: created logger, level TRACE
+// 2026-05-26T10:46:11.803Z /mnt/tmpfs.ramdisk/arenalog/04_log_context_print_test.go Line158 service=auth req_id=12345 cache_hit=true root ends=here msg=xxx1
+// 2026-05-26T10:46:11.803Z /mnt/tmpfs.ramdisk/arenalog/04_log_context_print_test.go Line160 service=auth req_id=12345 cache_hit=true root ends=here area=some area msg=login ok again
+// 2026-05-26T10:46:11.803Z /mnt/tmpfs.ramdisk/arenalog/04_log_context_print_test.go Line161 service=auth req_id=12345 cache_hit=true root ends=here area=some area msg=hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+// 2026-05-26T10:46:11.803Z level=INFO service=auth req_id=12345 cache_hit=true root ends=here area=some area zzzz=4.299999999999 g=8 msg=finished
+// 2026-05-26T10:46:11.803Z level=ERROR service=auth req_id=12345 cache_hit=true root ends=here area=some area xxxxxxxxxxxxx=2 g=11 msg=some error
 
 func TestContext_Raw_Print(t *testing.T) {
 	var bufLogs, bufFatal bytes.Buffer
@@ -157,6 +159,7 @@ func TestContext_Raw_Print(t *testing.T) {
 	f.Print("xxx1")
 	f.SetString("area", "some area")
 	f.Print("login ok again")
+	f.Prints("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
 
 	go func() {
 		f.With("xxxxxxxxxxxxx", "2").
@@ -179,22 +182,24 @@ func TestContext_Raw_Print(t *testing.T) {
 	// --- Processing Lines ---
 	require.Zero(t, bufFatal.Len())
 
+	fmt.Println(bufLogs.String())
+
 	logSet, errParse := query.NewRawset(bufLogs.String())
 	require.NoError(t, errParse)
 
 	require.Len(t,
 		logSet,
-		5,
+		6,
 
 		logSet,
 	)
 
-	require.Len(t, logSet.WithTimestamp(), 5)
-	require.NoError(t, logSet.HasKey("msg", 4))
-	require.NoError(t, logSet.HasKey("req_id", 4))
+	require.Len(t, logSet.WithTimestamp(), 6)
+	require.NoError(t, logSet.HasKey("msg", 5))
+	require.NoError(t, logSet.HasKey("req_id", 5))
 
-	require.NoError(t, logSet.HasKey("caller", 3))
-	require.NoError(t, logSet.HasKeyWithValue("service", "auth", 4))
+	require.NoError(t, logSet.HasKey("caller", 4))
+	require.NoError(t, logSet.HasKeyWithValue("service", "auth", 5))
 
 	require.NoError(t, logSet.HasKey("level", 2))
 	require.NoError(t, logSet.HasKeyWithValue("level", "INFO", 1))

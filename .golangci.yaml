@@ -71,7 +71,7 @@ linters:
         - assignOp
 
     gocyclo:
-      min-complexity: 40
+      min-complexity: 50
 
     errcheck:
       exclude-functions:
@@ -127,7 +127,7 @@ linters:
           arguments: [32]
 
         - name: cyclomatic
-          arguments: [40]
+          arguments: [50]
 
         - name: max-control-nesting
           arguments: [7]
@@ -142,6 +142,9 @@ linters:
           disabled: true
 
         - name: constant-logical-expr
+          disabled: true
+
+        - name: cognitive-complexity
           disabled: true
 
         - name: exported

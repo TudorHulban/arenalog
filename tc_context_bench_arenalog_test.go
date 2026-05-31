@@ -51,7 +51,8 @@ func TestArenalog_OneField(t *testing.T) {
 	<-chIngestionEnd
 }
 
-// go test -run '^$' -bench '^BenchmarkArenalog_OneField$' -benchmem -memprofile=mem.prof -cpuprofile=cpu.prof
+// go test -run '^$' -bench '^BenchmarkArenalog_Msg_OneField$' -benchmem -memprofile=mem.prof -cpuprofile=cpu.prof
+// go test -bench="^BenchmarkArenalog_Msg_OneField$" -run="^$" -count=1
 
 // cpu: AMD Ryzen 7 5800H with Radeon Graphics
 // BenchmarkArenalog_OneField/G1-16 	18887769	        61.41 ns/op	       0 B/op	       0 allocs/op
@@ -59,7 +60,7 @@ func TestArenalog_OneField(t *testing.T) {
 // BenchmarkArenalog_OneField/G3-16 	12475086	        95.51 ns/op	       5 B/op	       0 allocs/op
 // BenchmarkArenalog_OneField/G4-16 	12511933	        96.82 ns/op	       5 B/op	       0 allocs/op
 
-func BenchmarkArenalog_OneField(b *testing.B) {
+func BenchmarkArenalog_Msg_OneField(b *testing.B) {
 	gomaxprocsValues := []int{1, 2, 3, 4}
 	writer := helpers.CountWriterNoBuffer{}
 
@@ -128,6 +129,85 @@ func BenchmarkArenalog_OneField(b *testing.B) {
 	}
 }
 
+// go test -run '^$' -bench '^BenchmarkArenalog_Msgs_OneField$' -benchmem -memprofile=mem.prof -cpuprofile=cpu.prof
+// go tool pprof -alloc_objects arenalog.test mem.prof
+// go test -bench="^BenchmarkArenalog_Msgs_OneField$" -run="^$" -count=1
+
+// cpu: AMD Ryzen 7 5800H with Radeon Graphics
+// BenchmarkArenalog_Msgs_OneField/G1-16    5491644               216.6 ns/op           240 B/op          1 allocs/op
+// BenchmarkArenalog_Msgs_OneField/G2-16    5920932               196.5 ns/op           240 B/op          1 allocs/op
+// BenchmarkArenalog_Msgs_OneField/G3-16    5952040               200.5 ns/op           240 B/op          1 allocs/op
+// BenchmarkArenalog_Msgs_OneField/G4-16    5869352               202.9 ns/op           240 B/op          1 allocs/op
+
+func BenchmarkArenalog_Msgs_OneField(b *testing.B) {
+	gomaxprocsValues := []int{1, 2, 3, 4}
+	writer := helpers.CountWriterNoBuffer{}
+
+	for _, g := range gomaxprocsValues {
+		b.Run(
+			fmt.Sprintf("G%d", g),
+			func(b *testing.B) {
+				prev := runtime.GOMAXPROCS(g)
+				defer runtime.GOMAXPROCS(prev)
+
+				defer writer.Reset()
+
+				ingestor, errCrIngestor := bytearena.NewIngestor(
+					bytearena.Size100K(),
+					&writer,
+				)
+				require.NoError(b, errCrIngestor)
+				require.NotNil(b, ingestor)
+
+				ctx, cancel := context.WithCancel(context.Background())
+				chIngestionEnd := ingestor.StartIngestion(ctx)
+
+				logger, errCrLogger := NewLogger(
+					&ParamsNewLogger{
+						Ingestor:    ingestor,
+						LoggerLevel: LevelDebug,
+
+						WithFatalWriter: os.Stdout,
+						WithJSON:        true,
+					},
+
+					WithTimestampRFC3339UTC(b.Context()),
+				)
+				require.NoError(b, errCrLogger)
+
+				logContext := NewLogContext(logger).
+					WithRoot("service", "auth")
+
+				runtime.GC()
+
+				// warm up the pool
+				for i := 0; i < runtime.GOMAXPROCS(0)*4; i++ {
+					e, _ := entryPool.Get().(*Entry) //nolint:revive
+					entryPool.Put(e)
+				}
+
+				var warmupBuffer []byte
+				timestamp.TimestampRFC3339UTC(warmupBuffer)
+
+				b.ReportAllocs()
+				b.ResetTimer()
+
+				for b.Loop() {
+					entry := logContext.WithString("area", "some area")
+					entry.Info().Msgs("benchmark test")
+				}
+
+				cancel()
+				<-chIngestionEnd
+
+				require.NotZero(b,
+					writer.TotalBytesWritten.Load(),
+				)
+			},
+		)
+	}
+}
+
 // test produces
 // {"ts":"2026-05-04T14:29:35Z","level":"INFO","msg":"created logger, level INFO"}
 // {"ts":"2026-05-04T14:29:35Z","level":"INFO","service":"auth","req_id":12345,"cache_hit":true,"area":"some area","user":"tudor","attempt":1,"some float":1.113699999999,"success":true,"message":"benchmark test"}
@@ -176,7 +256,7 @@ func TestArenalog_MultipleFields(t *testing.T) {
 }
 
 // go test -run '^$' -bench '^BenchmarkContext_NoJSON_MultipleFields$' -benchmem -memprofile=mem.prof -cpuprofile=cpu.prof
-// go tool pprof -alloc_objects mem.out
+// go tool pprof -alloc_objects mem.prof
 
 // cpu: AMD Ryzen 5 5600U with Radeon Graphics
 // BenchmarkContext_NoJSON_MultipleFields-12    	11057649	       110.6 ns/op	       4 B/op	       0 allocs/op
