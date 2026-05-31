@@ -31,9 +31,12 @@ func (e *Entry) Msg(msg string) {
 		// timestamp
 		if e.formatter.logger.fnTimestamp != nil {
 			buffer = append(buffer, `"ts":`...)
+
+			// Reuse buffer for timestamp to avoid extra allocation.
+			// Safe because AppendJSON_Quoted quotes the source before writing to dest.
 			buffer = helpers.AppendJSON_Quoted(
 				buffer,
-				e.formatter.logger.fnTimestamp(nil),
+				e.formatter.logger.fnTimestamp(buffer),
 			)
 			buffer = append(buffer, ',')
 		}
@@ -270,6 +273,9 @@ func (e *Entry) Msgs(msg string) {
 		// timestamp
 		if e.formatter.logger.fnTimestamp != nil {
 			buffer = append(buffer, `"ts":`...)
+
+			// Reuse buffer for timestamp to avoid extra allocation.
+			// Safe because AppendJSON_Quoted quotes the source before writing to dest.
 			buffer = helpers.AppendJSON_Quoted(
 				buffer,
 				e.formatter.logger.fnTimestamp(buffer),
