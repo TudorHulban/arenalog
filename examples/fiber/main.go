@@ -47,7 +47,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fiberLogger := arenafiber.Logger{
+	fiberLogger := arenafiber.ALogger{
 		L: l,
 	}
 
