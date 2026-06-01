@@ -1,7 +1,6 @@
 package arenafiber
 
 import (
-	"context"
 	"io"
 
 	fiberlog "github.com/gofiber/fiber/v3/log"
@@ -130,7 +129,7 @@ func (*ALogger) SetOutput(w io.Writer) {
 //     f.L.ingestor.SetWriter(w)
 // }
 
-func (f *ALogger) WithContext(ctx context.Context) fiberlog.CommonLogger {
+func (f *ALogger) WithContext(ctx any) fiberlog.CommonLogger {
 	// Logger does not use context, so this is a no‑op.
 	return f
 }
