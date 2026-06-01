@@ -83,7 +83,7 @@ func NewLogger(params *ParamsNewLogger, options ...Option) (*Logger, error) {
 	}
 
 	if result.callerLevel == 0 {
-		result.callerLevel = 1
+		result.callerLevel = 2
 	}
 
 	for _, option := range options {

@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
-
 	"os"
 
 	"github.com/gofiber/fiber/v3"
 	fiberlog "github.com/gofiber/fiber/v3/log"
 	"github.com/gofiber/fiber/v3/middleware/logger"
+
 	"github.com/tudorhulban/arenalog"
+	arenafiber "github.com/tudorhulban/arenalog/arena-fiber"
 	"github.com/tudorhulban/bytearena"
 )
 
@@ -46,21 +47,21 @@ func main() {
 		os.Exit(1)
 	}
 
-	fiberLogger := FiberLogger{
+	fiberLogger := arenafiber.Logger{
 		L: l,
 	}
 
-	// 4. Start ingestion
+	// 4. Start ingestion.
 	ctx, cancel := context.WithCancel(context.Background())
 	chIngestionEnd := ingestor.StartIngestion(ctx)
 
-	// 5. Register your logger with Fiber
+	// 5. Register the created logger with Fiber.
 	fiberlog.SetLogger(&fiberLogger)
 
-	// 6. Create Fiber app
+	// 6. Create Fiber app.
 	app := fiber.New()
 
-	// 4. IMPORTANT: Add the logger middleware
+	// 7. Add the logger middleware
 	app.Use(
 		logger.New(
 			logger.Config{
@@ -80,7 +81,7 @@ func main() {
 		),
 	)
 
-	// 6. Routes
+	// 8. Routes
 	app.Get(
 		"/",
 		func(c fiber.Ctx) error {
@@ -88,12 +89,12 @@ func main() {
 		},
 	)
 
-	// 7. Start server
-	if err := app.Listen(":3000"); err != nil {
+	// 9. Start server.
+	if err := app.Listen(":3001"); err != nil {
 		l.Fatal(err)
 	}
 
-	// 8. Cleanup
+	// 10. Cleanup
 	cancel()
 	<-chIngestionEnd
 }
