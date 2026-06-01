@@ -10,7 +10,7 @@ import (
 
 // see https://docs.gofiber.io/api/log#global-log
 
-var _ fiberlog.AllLogger[ALogger] = (*ALogger)(nil)
+var _ fiberlog.AllLogger[*ALogger] = (*ALogger)(nil)
 
 type ALogger struct {
 	L *arenalog.Logger
@@ -78,16 +78,16 @@ func (f *ALogger) Printw(msg string, keysAndValues ...any) {
 }
 
 // --- Fiber-required structured logging ---
-func (f *ALogger) With(args ...any) fiberlog.AllLogger[ALogger] {
+func (f *ALogger) With(args ...any) fiberlog.AllLogger[*ALogger] {
 	return f
 }
 
-func (f *ALogger) WithGroup(name string) fiberlog.AllLogger[ALogger] {
+func (f *ALogger) WithGroup(name string) fiberlog.AllLogger[*ALogger] {
 	return f
 }
 
-func (f *ALogger) Logger() ALogger {
-	return *f
+func (f *ALogger) Logger() *ALogger {
+	return f
 }
 
 func (f *ALogger) SetLevel(level fiberlog.Level) {
