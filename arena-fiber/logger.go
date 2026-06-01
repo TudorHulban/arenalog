@@ -9,6 +9,7 @@ import (
 
 // see https://docs.gofiber.io/api/log#global-log
 
+// Verified for Fiber v3.3+ (where WithContext uses 'any')
 var _ fiberlog.AllLogger[*ALogger] = (*ALogger)(nil)
 
 type ALogger struct {
