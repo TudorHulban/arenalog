@@ -17,7 +17,7 @@ type Logger struct {
 }
 
 // Note: These methods are lightweight wrappers that directly call the underlying
-// arenalog instance. The Go compiler automatically inlines these single-call
+// arenalog instance. The Go compiler should automatically inline these single-call
 // passthrough methods (mid-stack inlining), eliminating function call overhead
 // at compile time without requiring manual inline optimization.
 
@@ -79,13 +79,10 @@ func (f *Logger) Printw(msg string, keysAndValues ...any) {
 
 // --- Fiber-required structured logging ---
 func (f *Logger) With(args ...any) fiberlog.AllLogger[*arenalog.Logger] {
-	// Your logger does not support structured fields natively.
-	// No-op is acceptable.
 	return f
 }
 
 func (f *Logger) WithGroup(name string) fiberlog.AllLogger[*arenalog.Logger] {
-	// Same: no-op unless you want grouping.
 	return f
 }
 
@@ -117,10 +114,9 @@ func (f *Logger) SetLevel(level fiberlog.Level) {
 }
 
 func (*Logger) SetOutput(w io.Writer) {
-	// Your logger does not expose SetOutput directly,
+	// Logger does not expose SetOutput directly,
 	// but the standard pattern is to redirect PrintRaw / PrintMessage
-	// through a writer. If your logger has no writer concept,
-	// you must store it and ignore it.
+	// through a writer.
 	//
 	// Minimal no‑op implementation:
 	_ = w
@@ -135,6 +131,6 @@ func (*Logger) SetOutput(w io.Writer) {
 // }
 
 func (f *Logger) WithContext(ctx context.Context) fiberlog.CommonLogger {
-	// Your logger does not use context, so this is a no‑op.
+	// Logger does not use context, so this is a no‑op.
 	return f
 }
