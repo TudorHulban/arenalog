@@ -1,7 +1,6 @@
 package arenafiber
 
 import (
-	"context"
 	"io"
 
 	fiberlog "github.com/gofiber/fiber/v3/log"
@@ -10,9 +9,10 @@ import (
 
 // see https://docs.gofiber.io/api/log#global-log
 
-var _ fiberlog.AllLogger[*arenalog.Logger] = (*Logger)(nil)
+// Verified for Fiber v3.3+ (where WithContext uses 'any')
+var _ fiberlog.AllLogger[*ALogger] = (*ALogger)(nil)
 
-type Logger struct {
+type ALogger struct {
 	L *arenalog.Logger
 }
 
@@ -22,75 +22,75 @@ type Logger struct {
 // at compile time without requiring manual inline optimization.
 
 // --- Trace ---
-func (f *Logger) Trace(args ...any)                 { f.L.Trace(args...) }
-func (f *Logger) Tracef(format string, args ...any) { f.L.Tracef(format, args...) }
-func (f *Logger) Tracew(msg string, keysAndValues ...any) {
+func (f *ALogger) Trace(args ...any)                 { f.L.Trace(args...) }
+func (f *ALogger) Tracef(format string, args ...any) { f.L.Tracef(format, args...) }
+func (f *ALogger) Tracew(msg string, keysAndValues ...any) {
 	f.L.Tracew(msg, keysAndValues...)
 }
 
 // --- Debug ---
-func (f *Logger) Debug(args ...any)                 { f.L.Debug(args...) }
-func (f *Logger) Debugf(format string, args ...any) { f.L.Debugf(format, args...) }
-func (f *Logger) Debugw(msg string, keysAndValues ...any) {
+func (f *ALogger) Debug(args ...any)                 { f.L.Debug(args...) }
+func (f *ALogger) Debugf(format string, args ...any) { f.L.Debugf(format, args...) }
+func (f *ALogger) Debugw(msg string, keysAndValues ...any) {
 	f.L.Debugw(msg, keysAndValues...)
 }
 
 // --- Info ---
-func (f *Logger) Info(args ...any)                 { f.L.Info(args...) }
-func (f *Logger) Infof(format string, args ...any) { f.L.Infof(format, args...) }
-func (f *Logger) Infow(msg string, keysAndValues ...any) {
+func (f *ALogger) Info(args ...any)                 { f.L.Info(args...) }
+func (f *ALogger) Infof(format string, args ...any) { f.L.Infof(format, args...) }
+func (f *ALogger) Infow(msg string, keysAndValues ...any) {
 	f.L.Infow(msg, keysAndValues...)
 }
 
 // --- Warn ---
-func (f *Logger) Warn(args ...any)                 { f.L.Warn(args...) }
-func (f *Logger) Warnf(format string, args ...any) { f.L.Warnf(format, args...) }
-func (f *Logger) Warnw(msg string, keysAndValues ...any) {
+func (f *ALogger) Warn(args ...any)                 { f.L.Warn(args...) }
+func (f *ALogger) Warnf(format string, args ...any) { f.L.Warnf(format, args...) }
+func (f *ALogger) Warnw(msg string, keysAndValues ...any) {
 	f.L.Warnw(msg, keysAndValues...)
 }
 
 // --- Error ---
-func (f *Logger) Error(args ...any)                 { f.L.Error(args...) }
-func (f *Logger) Errorf(format string, args ...any) { f.L.Errorf(format, args...) }
-func (f *Logger) Errorw(msg string, keysAndValues ...any) {
+func (f *ALogger) Error(args ...any)                 { f.L.Error(args...) }
+func (f *ALogger) Errorf(format string, args ...any) { f.L.Errorf(format, args...) }
+func (f *ALogger) Errorw(msg string, keysAndValues ...any) {
 	f.L.Errorw(msg, keysAndValues...)
 }
 
 // --- Fatal ---
-func (f *Logger) Fatal(args ...any)                 { f.L.Fatal(args...) }
-func (f *Logger) Fatalf(format string, args ...any) { f.L.Fatalf(format, args...) }
-func (f *Logger) Fatalw(msg string, keysAndValues ...any) {
+func (f *ALogger) Fatal(args ...any)                 { f.L.Fatal(args...) }
+func (f *ALogger) Fatalf(format string, args ...any) { f.L.Fatalf(format, args...) }
+func (f *ALogger) Fatalw(msg string, keysAndValues ...any) {
 	f.L.Fatalw(msg, keysAndValues...)
 }
 
 // --- Panic ---
-func (f *Logger) Panic(args ...any)                 { f.L.Panic(args...) }
-func (f *Logger) Panicf(format string, args ...any) { f.L.Panicf(format, args...) }
-func (f *Logger) Panicw(msg string, keysAndValues ...any) {
+func (f *ALogger) Panic(args ...any)                 { f.L.Panic(args...) }
+func (f *ALogger) Panicf(format string, args ...any) { f.L.Panicf(format, args...) }
+func (f *ALogger) Panicw(msg string, keysAndValues ...any) {
 	f.L.Panicw(msg, keysAndValues...)
 }
 
 // --- Print ---
-func (f *Logger) Print(args ...any)                 { f.L.Print(args...) }
-func (f *Logger) Printf(format string, args ...any) { f.L.Printf(format, args...) }
-func (f *Logger) Printw(msg string, keysAndValues ...any) {
+func (f *ALogger) Print(args ...any)                 { f.L.Print(args...) }
+func (f *ALogger) Printf(format string, args ...any) { f.L.Printf(format, args...) }
+func (f *ALogger) Printw(msg string, keysAndValues ...any) {
 	f.L.Printw(msg, keysAndValues...)
 }
 
 // --- Fiber-required structured logging ---
-func (f *Logger) With(args ...any) fiberlog.AllLogger[*arenalog.Logger] {
+func (f *ALogger) With(args ...any) fiberlog.AllLogger[*ALogger] {
 	return f
 }
 
-func (f *Logger) WithGroup(name string) fiberlog.AllLogger[*arenalog.Logger] {
+func (f *ALogger) WithGroup(name string) fiberlog.AllLogger[*ALogger] {
 	return f
 }
 
-func (f *Logger) Logger() *arenalog.Logger {
-	return f.L
+func (f *ALogger) Logger() *ALogger {
+	return f
 }
 
-func (f *Logger) SetLevel(level fiberlog.Level) {
+func (f *ALogger) SetLevel(level fiberlog.Level) {
 	switch level { //nolint:revive
 	case fiberlog.LevelTrace:
 		f.L.SetLogLevel(arenalog.LevelTrace)
@@ -113,7 +113,7 @@ func (f *Logger) SetLevel(level fiberlog.Level) {
 	}
 }
 
-func (*Logger) SetOutput(w io.Writer) {
+func (*ALogger) SetOutput(w io.Writer) {
 	// Logger does not expose SetOutput directly,
 	// but the standard pattern is to redirect PrintRaw / PrintMessage
 	// through a writer.
@@ -130,7 +130,7 @@ func (*Logger) SetOutput(w io.Writer) {
 //     f.L.ingestor.SetWriter(w)
 // }
 
-func (f *Logger) WithContext(ctx context.Context) fiberlog.CommonLogger {
+func (f *ALogger) WithContext(ctx any) fiberlog.CommonLogger {
 	// Logger does not use context, so this is a no‑op.
 	return f
 }
